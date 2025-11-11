@@ -22,11 +22,19 @@ Controls today: `←/→` or `A/D` to switch lanes, `R` to restart, `Q` to quit.
 - Active plans live under `.agents/` and are numbered chronologically:
   - `001-runtime-harness`: inventory the current build, break out reusable modules, and define test/harness tooling.
   - `002-death-rally-build`: refactor into modules and implement the new top-down racer.
-- Run tests / harness scripts once they land via `npm test` or `npm run demo` (to be defined during Plan 001).
+- Run tests / harness scripts once they land via `npm test` or `npm run smoke -- --macro lanes`.
+
+### Testing & smoke harness
+
+- `npm test` runs the Node built-in `node --test` suites covering Braille canvas helpers, geometry projections, keyboard decoding, and state recycling.
+- `npm run smoke -- --macro lanes --duration 5 --output tmp/smoke.txt`
+  - Spawns `npx .` inside a pseudo-terminal, feeds a scripted key macro, and writes the ANSI output to `tmp/smoke.txt` (create `tmp/` beforehand).
+  - Macros (`lanes`, `pause`) are defined in `scripts/smoke-run.js`; add more to reproduce bugs or demo flows.
+- Run the smoke command before publishing to ensure the CLI still enters/exits the alt-screen cleanly and responds to scripted input.
 
 ## Status & next steps
 
-1. Finish Plan 001: capture runtime observations, spec the PTY harness + unit test surfaces, and outline the execution checklist.
+1. Finish Plan 001: capture runtime observations, spec the PTY harness + unit test surfaces, and outline the execution checklist. (In progress now!)
 2. Execute Plan 002: build the Death Rally experience (renderer, physics, HUD, combat, pause/high-scores) while keeping the game runnable with `npx neon-rails`.
 3. Polish for npm publish (README gifs, demo script, version bump).
 

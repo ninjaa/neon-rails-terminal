@@ -2,6 +2,10 @@
   "name": "neon-rails-terminal",
   "version": "0.0.1",
   "description": "A neon lane-switcher that runs in your terminal using Unicode braille + 24-bit color.",
+  "scripts": {
+    "test": "node --test",
+    "smoke": "node scripts/smoke-run.js"
+  },
   "bin": {
     "neon-rails": "bin/neon-rails.js"
   },
