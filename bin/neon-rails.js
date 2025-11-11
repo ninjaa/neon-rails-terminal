@@ -582,7 +582,7 @@ function main() {
     createCanvas();
   });
 
-  createFrameLoop(update);
+  createFrameLoop(update, { fps: 60 });
 }
 
 main();

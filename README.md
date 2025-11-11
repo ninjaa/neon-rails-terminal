@@ -21,6 +21,17 @@ Controls:
 - `ENTER` / `SPACE` — start race (from splash)  
 - `Q` — quit (also `Ctrl+C`)
 
+## What you get
+
+- **Neon splash screen** with lore recap and control list. Nothing renders until you “jack in”, so the terminal stays clean.
+- **Top-down SOMA circuit** inspired by Death Rally: GPU pickups, boosts, hazards, rival AI (Bogus Bill & Cher Stone), lap counting.
+- **Weighty driving** with heading-based drift, throttle/brake, bump damage, and speed boosts when you steal GPUs.
+- **HUD side panel** showing damage bar, speed, GPU credits, lap count, and rival standings.
+- **Status toasts** (“GPU secured”, “Wall scrape”, “Race complete”) plus pause/restart flow.
+- **Harness + test suite** (`npm test`, `npm run smoke`) so every change stays reliable.
+
+The render loop now locks to 60 FPS, greatly reducing flicker on both the splash and gameplay frames.
+
 ## Development workflow
 
 - We follow the ExecPlan/TDD guidance in `AGENTS.md`.
