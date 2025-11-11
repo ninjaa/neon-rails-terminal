@@ -1,12 +1,12 @@
 # Neon Rails Terminal
 
-A Node-only terminal game experiment that renders neon “braille pixels” with 24-bit ANSI color.  
-Current prototype: forward-runner rails; upcoming pivot: a top-down Death Rally homage with weighty physics, AI rivals, pause/high-score UX, and juicy combat.
+A Node-only terminal racer that renders neon “braille pixels” with 24-bit ANSI color.  
+Current build: **Neon Death Rally** — a top-down SOMA night sprint with GPU pickups, rival cars, ram damage, pause/restart, and a HUD inspired by the classic Death Rally sidebar.
 
 ## Quick start
 
 ```bash
-# run the published CLI from the repo root
+# run the CLI from the repo root
 npx .
 
 # or link once and play anywhere
@@ -14,15 +14,20 @@ npm link
 neon-rails
 ```
 
-Controls today: `←/→` or `A/D` to switch lanes, `R` to restart, `Q` to quit.
+Controls:  
+- `←/→` or `A/D` — steer  
+- `↑/↓` or `W/S` — throttle up/down  
+- `P` — pause/resume  
+- `R` — restart race  
+- `Q` — quit (also `Ctrl+C`)
 
 ## Development workflow
 
 - We follow the ExecPlan/TDD guidance in `AGENTS.md`.
 - Active plans live under `.agents/` and are numbered chronologically:
-  - `001-runtime-harness`: inventory the current build, break out reusable modules, and define test/harness tooling.
-  - `002-death-rally-build`: refactor into modules and implement the new top-down racer.
-- Run tests / harness scripts once they land via `npm test` or `npm run smoke -- --macro lanes`.
+  - `001-runtime-harness`: ✅ complete — modularized the CLI, added PTY harness + unit tests.
+  - `002-death-rally-build`: 🚧 executing — adds the neon Death Rally renderer, physics, combat, and UX polish.
+- Run tests / harness scripts via `npm test` or `npm run smoke -- --macro lanes`.
 
 ### Testing & smoke harness
 
@@ -34,8 +39,8 @@ Controls today: `←/→` or `A/D` to switch lanes, `R` to restart, `Q` to quit.
 
 ## Status & next steps
 
-1. Finish Plan 001: capture runtime observations, spec the PTY harness + unit test surfaces, and outline the execution checklist. (In progress now!)
-2. Execute Plan 002: build the Death Rally experience (renderer, physics, HUD, combat, pause/high-scores) while keeping the game runnable with `npx neon-rails`.
-3. Polish for npm publish (README gifs, demo script, version bump).
+1. Plan 002 in progress: finish physics/combat polish (damage FX, boosts), add basic scoring persistence, and tighten AI.  
+2. Capture gameplay GIF + README gallery once the race loop is final.  
+3. Prep for npm publish (version bump, changelog).
 
 Style references, palette ideas, and gameplay notes are welcome—drop them in future plan sections or issues.

@@ -69,3 +69,29 @@ test("keyboard controller triggers restart and quit handlers", () => {
 
   controller.dispose();
 });
+
+test("keyboard controller emits throttle events for keys and arrows", () => {
+  const stdin = new MockStdin();
+  let throttle = 0;
+  const controller = createKeyboardController({
+    stdin,
+    onThrottle(delta) {
+      throttle += delta;
+    },
+  });
+  stdin.emitChunk("w");
+  assert.equal(throttle, 1);
+  stdin.emitChunk("s");
+  assert.equal(throttle, 0);
+
+  stdin.emitChunk("\x1b");
+  stdin.emitChunk("[");
+  stdin.emitChunk("A");
+  assert.equal(throttle, 1);
+  stdin.emitChunk("\x1b");
+  stdin.emitChunk("[");
+  stdin.emitChunk("B");
+  assert.equal(throttle, 0);
+
+  controller.dispose();
+});

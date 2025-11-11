@@ -8,6 +8,7 @@ function createKeyboardController({
   onRestart = () => {},
   onQuit = () => {},
   onPause = () => {},
+  onThrottle = () => {},
 } = {}) {
   stdin.setRawMode?.(true);
   stdin.resume();
@@ -38,6 +39,14 @@ function createKeyboardController({
           onLaneChange(-1);
           pendingEsc = false;
           escBuf = "";
+        } else if (last === "A") {
+          onThrottle(1);
+          pendingEsc = false;
+          escBuf = "";
+        } else if (last === "B") {
+          onThrottle(-1);
+          pendingEsc = false;
+          escBuf = "";
         } else if (/[ABCD]/.test(last)) {
           pendingEsc = false;
           escBuf = "";
@@ -57,6 +66,14 @@ function createKeyboardController({
       case "d":
       case "D":
         onLaneChange(1);
+        break;
+      case "w":
+      case "W":
+        onThrottle(1);
+        break;
+      case "s":
+      case "S":
+        onThrottle(-1);
         break;
       case "r":
       case "R":
