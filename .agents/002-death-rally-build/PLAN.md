@@ -21,15 +21,15 @@ This is the marquee hackathon deliverable: a 90s-inspired combat racer in the te
 - Future hooks (not necessarily shipping here but design-aware): multiplayer, music-reactive shaders, theme packs.
 
 ## Plan of Work
-1. **Refactor scaffold** — Move shared utilities from `bin/neon-rails.js` into `src/terminal`, `src/render/braille`, `src/math`, exporting a clean game loop interface. _Validation:_ lint/tests from Plan 001 still pass; CLI still launches old game behind a flag.
-2. **Renderer overhaul** — Implement a top-down tile renderer: track bitmap, lighting masks, car sprites (multi-dot stamps), HUD side panel with damage/speed/position. _Validation:_ deterministic frame capture via harness + manual playtest GIF.
-3. **Physics & controls** — Build car state (pos, heading, velocity, angular velocity), integrate forces for acceleration, drift, collision response, and enemy AI path following. _Validation:_ unit tests for integrator + harness script verifying lane change + bump.
-4. **Combat & feedback** — Track damage per car, implement collision damage, flashing/explosion effect (color pulses, particle splats), and respawn/finish logic. _Validation:_ tests for damage math and manual smoke showing explosions trigger.
-5. **Gameplay loop & UX** — Add pause (`P`), restart (`R`), scoreboard (session best), lap progression, finish screen, and CLI help output. _Validation:_ harness script simulating pause/resume + scoreboard update; manual acceptance pass.
-6. **Polish & packaging** — Write README snippet, update package metadata, ensure `npm test` + `npm run demo` instructions exist, and prep notes for future multiplayer/audio plans. _Validation:_ final playtest + user approval.
+1. **Experience vision & level spec** — Lock the neon-Death Rally fantasy: SOMA night sprint, GPU credit pickups, rival AI archetypes, HUD layout. Deliverables: written spec + ASCII layout for the single track referencing `inspiration/` art + `inspiration/backstory.md`. _Validation:_ spec reviewed/approved.
+2. **Core renderer build** — Implement top-down renderer on the braille canvas (tile atlas, light masks, HUD sidebar). _Validation:_ harness frame capture + screenshot stored in `docs/`.
+3. **Physics & controls** — Introduce car state (pos/vel/heading), weighty drift, boost, AI path following, and deterministic stepping for tests. _Validation:_ node:test suite for integrator + harness macro verifying steering.
+4. **Combat & damage loop** — Add ramming damage, GPU credit pickups, explosions, damage meter, and simple death/respawn. _Validation:_ tests for damage math + smoke macro verifying damage HUD updates.
+5. **Gameplay UX & scoring** — Wire pause, restart, finish conditions, lap timer, high-score memory (in-session) and CLI help. _Validation:_ harness macro exercising pause/resume + scoreboard tests.
+6. **Polish & ship prep** — README updates, animated gif (optional), version bump, publish checklist. _Validation:_ manual playtest + `npm test`/`npm run smoke` clean.
 
 ## Progress
-- [ ] Scaffold refactor complete.
+- [x] (2025-11-11 03:10 Z) Experience vision & level spec captured.
 - [ ] Renderer implemented.
 - [ ] Physics & controls implemented/tested.
 - [ ] Combat feedback done.
@@ -53,3 +53,35 @@ This is the marquee hackathon deliverable: a 90s-inspired combat racer in the te
 ## Next Steps / Handoff Notes
 - Blocked until Plan 001 delivers harness + module map.
 - Once scaffolding lands, start with renderer + physics to get a drivable greybox, then layer combat/HUD.
+
+---
+
+## Experience Vision (Neon Death Rally)
+- **Setting:** 2025 SOMA night circuit inspired by the backstory—neon-washed streets, drone spotlights, GPU crates to collect. Track loops through alleys and underpasses; player competes for GPU credits to build their own AGI.
+- **Palette:** retain cyan/magenta core but add sodium vapor golds + oily greens from `inspiration/*.webp`. Plan: `neon-dirt` palette (background deep navy `#060612`, asphalt gradient, fuchsia tail lights, cyan headlights, hazard yellow for pickups).
+- **Camera:** 3/4 overhead with slight isometric skew (top-left -> far). Use braille canvas as 160×80 virtual grid. Car sprites: 3×4 stamps with heading-based shading (front brighter). Light pools drawn as semi-transparent circles (approx via alpha blending on color buffer).
+- **HUD:** Left sidebar mimicking Death Rally: damage meter (stacked bars), speed gauge, rank list (player + 2 AI), GPU credits counter, lap/total. Top center shows track name + mission (“Steal more GPUs than Bogus Bill”).
+- **Mechanics:** 
+  - Player car with drift (turning reduces grip, use acceleration/brake keys). 
+  - Two AI rivals: “Bogus Bill” (aggressive), “Cher Stone” (defensive). AI follows spline path with random lane offsets; engages in bumping if player near.
+  - Pickups: GPU crates spawn along shortcuts; hitting them yields score + temporary speed buff.
+  - Damage: collisions reduce armor; at 0, car explodes (pulse effect) and respawns after delay with score penalty.
+  - Pause (`P`), restart (`R`), quit (`Q`), toggled scoreboard overlay.
+- **Future hooks:** audio-reactive glow (tie into theme), multiplayer lanes, file-based high scores. Not shipping now but inform architecture (e.g., deterministic RNG, state serialization).
+
+### Track Sketch (ASCII)
+
+```
+        ┌────────── Drone Yard ─────────┐
+        │                                │
+   ┌────┘    ╭─────╮          ╭─────╮    └────┐
+   │         │GPU ◇│  Alley   │ ⚡  │         │
+Start╶──pit──╯     ╰──────────╯     ╰───╮  Finish
+   │                         ╭───╮       │
+   │      Underpass          │## │        │
+   └───────────────╮   ╭─────╯##╰─────────┘
+                   │   │  SoMa Dock
+```
+
+- `◇` GPU pickup, `⚡` speed pad, `##` construction hazard (narrow lanes).
+- Player starts near pit; AI spawn staggered 0.3 lap behind/ ahead.
