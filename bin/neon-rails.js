@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /* Neon Rails — Neon Death Rally edition.
-   Controls: A/D or ←/→ steer, W/S or ↑/↓ throttle, P pause, R restart, Q quit. */
+   Controls: A/D or ←/→ steer, W/S or ↑/↓ throttle, P pause, R restart, Enter to start, Q quit. */
 
 const out = process.stdout;
 
-const { SEQS, TRUECOLOR } = require("../src/terminal/io");
+const { SEQS, TRUECOLOR, fg24 } = require("../src/terminal/io");
 const { BrailleCanvas } = require("../src/render/braille-canvas");
 const { createKeyboardController } = require("../src/input/keyboard");
 const { createFrameLoop } = require("../src/runtime/loop");
@@ -19,6 +19,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const layout = buildTrackLayout();
 const TILE_PX = 4;
 const defaultStatus = "Steal GPUs, fund your outlaw AGI.";
+const splashPrompt = "Press ENTER to jack in.";
 
 const pathPoints = [
   { x: 1.5, y: 1.5 },
@@ -60,7 +61,13 @@ const rivals = [
   createRival("Cher Stone", 0.62),
 ];
 
-let status = { message: defaultStatus, timer: 0, paused: false, finished: false };
+let status = {
+  message: splashPrompt,
+  timer: 0,
+  paused: true,
+  finished: false,
+  splash: true,
+};
 let steerInput = 0;
 let keyboard;
 let canvas;
@@ -112,7 +119,11 @@ function setupInput() {
       setStatus(delta > 0 ? "Throttle up" : "Throttle down", 1.2);
     },
     onRestart() {
-      resetRace();
+      if (status.splash) {
+        startRace();
+      } else {
+        resetRace();
+      }
     },
     onPause() {
       status.paused = !status.paused;
@@ -121,7 +132,30 @@ function setupInput() {
     onQuit() {
       cleanExit(0);
     },
+    onStart() {
+      if (status.splash || status.finished) {
+        startRace();
+      }
+    },
   });
+}
+
+function startRace() {
+  status.splash = false;
+  resetRace();
+}
+
+function enterSplash() {
+  status = {
+    message: splashPrompt,
+    timer: 0,
+    paused: true,
+    finished: false,
+    splash: true,
+  };
+  laps.current = 1;
+  player.speed = 0;
+  player.targetSpeed = 0;
 }
 
 function resetRace() {
@@ -132,6 +166,7 @@ function resetRace() {
     timer: 2.2,
     paused: false,
     finished: false,
+    splash: false,
   };
   player.x = layout.start ? layout.start.x + 0.5 : 1.5;
   player.y = layout.start ? layout.start.y + 0.5 : 1.5;
@@ -444,7 +479,47 @@ function worldToPixel(wx, wy) {
   };
 }
 
+function renderSplash() {
+  canvas.clear();
+  // diagonal neon streaks
+  for (let y = 0; y < canvas.ph; y += 2) {
+    for (let x = 0; x < canvas.pw; x += 2) {
+      const glow = (Math.sin((x + y) * 0.05) + 1) * 0.5;
+      const color = glow > 0.5 ? C.railL : C.railR;
+      if (Math.random() < 0.35) {
+        canvas.plot(x, y, color);
+      }
+    }
+  }
+  const splashHud = `${fg24(200, 210, 255)}NEON RAILS${SEQS.reset} — ${fg24(170, 230, 255)}${splashPrompt}${SEQS.reset}`;
+  const info = `
+
+  ██╗  ██╗███████╗ ██████╗ ███╗   ██╗    ██████╗ ███████╗ █████╗ ██╗     ██╗   ██╗
+  ██║  ██║██╔════╝██╔═══██╗████╗  ██║    ██╔══██╗██╔════╝██╔══██╗██║     ██║   ██║
+  ███████║█████╗  ██║   ██║██╔██╗ ██║    ██████╔╝█████╗  ███████║██║     ██║   ██║
+  ██╔══██║██╔══╝  ██║   ██║██║╚██╗██║    ██╔═══╝ ██╔══╝  ██╔══██║██║     ██║   ██║
+  ██║  ██║███████╗╚██████╔╝██║ ╚████║    ██║     ███████╗██║  ██║███████╗╚██████╔╝
+  ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝     ╚══════╝╚═╝  ╚═╝╚══════╝ ╚═════╝
+
+  Nightfall in SOMA. Hack a hovercar, race for GPU crates, dodge drone spotlights.
+
+  Controls:
+    • ←/→ or A/D — steer
+    • ↑/↓ or W/S — throttle & brake
+    • P — pause / resume
+    • R — restart run
+    • ENTER / SPACE — start race
+    • Q — bail out
+
+  Objective: grab GPUs, ram rivals, finish 3 laps, and bank the credits.
+`;
+  out.write(canvas.toFrameString(splashHud) + info);
+}
+
 function renderFrame() {
+  canvas.clear();
+  drawTrack(canvas);
+  renderCars(canvas);
   canvas.clear();
   drawTrack(canvas);
   renderCars(canvas);
@@ -480,6 +555,10 @@ function renderFrame() {
 }
 
 function update(dt) {
+  if (status.splash) {
+    renderSplash();
+    return;
+  }
   if (status.timer > 0) {
     status.timer = Math.max(0, status.timer - dt);
     if (status.timer === 0 && !status.finished) {
@@ -497,7 +576,7 @@ function main() {
   out.write(SEQS.altScreenOn + SEQS.hideCursor);
   createCanvas();
   setupInput();
-  resetRace();
+  enterSplash();
 
   process.stdout.on("resize", () => {
     createCanvas();

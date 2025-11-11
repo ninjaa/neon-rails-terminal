@@ -1,17 +1,16 @@
 # Neon Rails Terminal
 
 A Node-only terminal racer that renders neon “braille pixels” with 24-bit ANSI color.  
-Current build: **Neon Death Rally** — a top-down SOMA night sprint with GPU pickups, rival cars, ram damage, pause/restart, and a HUD inspired by the classic Death Rally sidebar.
+Current build: **Neon Death Rally** — a top-down SOMA night sprint with GPU pickups, rival cars, ram damage, and a HUD inspired by the classic Death Rally sidebar.
 
 ## Quick start
 
 ```bash
-# run the CLI from the repo root
-npx .
+# play the published build
+npx @ninjaa/neon-rails
 
-# or link once and play anywhere
-npm link
-neon-rails
+# or run from source
+npx .
 ```
 
 Controls:  
@@ -19,6 +18,7 @@ Controls:
 - `↑/↓` or `W/S` — throttle up/down  
 - `P` — pause/resume  
 - `R` — restart race  
+- `ENTER` / `SPACE` — start race (from splash)  
 - `Q` — quit (also `Ctrl+C`)
 
 ## Development workflow
@@ -40,7 +40,7 @@ Controls:
 ## Status & next steps
 
 1. Plan 002 in progress: finish physics/combat polish (damage FX, boosts), add basic scoring persistence, and tighten AI.  
-2. Capture gameplay GIF + README gallery once the race loop is final.  
-3. Prep for npm publish (version bump, changelog).
+2. Capture gameplay GIF + README gallery for the new splash + race loop.  
+3. Publish via `npm publish --access public` (package name `@ninjaa/neon-rails`).
 
 Style references, palette ideas, and gameplay notes are welcome—drop them in future plan sections or issues.

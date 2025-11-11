@@ -95,3 +95,21 @@ test("keyboard controller emits throttle events for keys and arrows", () => {
 
   controller.dispose();
 });
+
+test("keyboard controller triggers start handler on space/enter", () => {
+  const stdin = new MockStdin();
+  let started = 0;
+  const controller = createKeyboardController({
+    stdin,
+    onStart() {
+      started += 1;
+    },
+  });
+  stdin.emitChunk(" ");
+  stdin.emitChunk("\r");
+  stdin.emitChunk("\x1b");
+  stdin.emitChunk("[");
+  stdin.emitChunk("Z");
+  assert.equal(started, 3);
+  controller.dispose();
+});

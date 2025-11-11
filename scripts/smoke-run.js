@@ -12,15 +12,17 @@ function readFlag(name, fallback) {
 
 const macros = {
   lanes: [
-    { time: 0.8, seq: "\u001b[C" },
-    { time: 1.4, seq: "\u001b[C" },
-    { time: 2.0, seq: "\u001b[D" },
-    { time: 2.6, seq: "r" },
+    { time: 0.2, seq: "\r" },
+    { time: 0.9, seq: "\u001b[C" },
+    { time: 1.5, seq: "\u001b[C" },
+    { time: 2.1, seq: "\u001b[D" },
+    { time: 2.7, seq: "r" },
   ],
   pause: [
-    { time: 0.8, seq: "p" },
-    { time: 1.5, seq: "p" },
-    { time: 2.0, seq: "r" },
+    { time: 0.2, seq: "\r" },
+    { time: 0.9, seq: "p" },
+    { time: 1.6, seq: "p" },
+    { time: 2.2, seq: "r" },
   ],
 };
 

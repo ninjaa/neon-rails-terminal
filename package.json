@@ -1,7 +1,7 @@
 {
-  "name": "neon-rails-terminal",
-  "version": "0.0.1",
-  "description": "A neon lane-switcher that runs in your terminal using Unicode braille + 24-bit color.",
+  "name": "@ninjaa/neon-rails",
+  "version": "0.1.0",
+  "description": "Neon Death Rally — a top-down SOMA racer rendered with 24-bit braille pixels in your terminal.",
   "scripts": {
     "test": "node --test",
     "smoke": "node scripts/smoke-run.js"
