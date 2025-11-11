@@ -67,6 +67,7 @@ let status = {
   paused: true,
   finished: false,
   splash: true,
+  raceTime: 0,
 };
 let steerInput = 0;
 let keyboard;
@@ -152,6 +153,7 @@ function enterSplash() {
     paused: true,
     finished: false,
     splash: true,
+    raceTime: 0,
   };
   laps.current = 1;
   player.speed = 0;
@@ -167,6 +169,8 @@ function resetRace() {
     paused: false,
     finished: false,
     splash: false,
+    raceTime: 0,
+    gameOverType: null,
   };
   player.x = layout.start ? layout.start.x + 0.5 : 1.5;
   player.y = layout.start ? layout.start.y + 0.5 : 1.5;
@@ -396,13 +400,23 @@ function updatePlayer(dt) {
     }
   }
 
+  // Check for player death
+  if (player.damage >= 1.0) {
+    status.finished = true;
+    status.paused = true;
+    status.gameOverType = "wasted";
+    setStatus("WASTED! Press R to try again.", 999);
+    return;
+  }
+
   const proj = projectOnPath(player.x, player.y);
   if (player.prevProgress !== null && proj < player.prevProgress - 0.6) {
     laps.current += 1;
     if (laps.current > laps.total) {
       status.finished = true;
       status.paused = true;
-      setStatus("Race complete! Press R to run again.", 6);
+      status.gameOverType = "complete";
+      setStatus(`Race complete! Final score: ${player.credits} GPU credits. Press R to run again.`, 999);
     } else {
       setStatus(`Lap ${laps.current}/${laps.total}`, 1.4);
     }
@@ -479,47 +493,89 @@ function worldToPixel(wx, wy) {
   };
 }
 
+function renderGameOver() {
+  canvas.clear();
+  // Create dramatic effect with red/cyan particles
+  for (let y = 0; y < canvas.ph; y += 3) {
+    for (let x = 0; x < canvas.pw; x += 3) {
+      const pulse = Math.sin(Date.now() * 0.002 + x * 0.1) * 0.5 + 0.5;
+      const color = status.gameOverType === "wasted" ?
+        [255, pulse * 100, pulse * 100] :
+        [0, 255, pulse * 255];
+      if (Math.random() < 0.2) {
+        canvas.plot(x, y, color);
+      }
+    }
+  }
+
+  const isWasted = status.gameOverType === "wasted";
+  const titleColor = isWasted ? fg24(255, 0, 0) : fg24(0, 255, 255);
+  const title = isWasted ? "WASTED" : "RACE COMPLETE";
+  const timeSeconds = Math.floor(status.raceTime / 20);
+
+  const gameOverText = `
+${titleColor}╔════════════════════════════════════════╗${SEQS.reset}
+${titleColor}║${SEQS.reset}            ${titleColor}${title}${SEQS.reset}            ${titleColor}║${SEQS.reset}
+${titleColor}╚════════════════════════════════════════╝${SEQS.reset}
+
+  ${fg24(255, 255, 255)}FINAL SCORE: ${player.credits} GPU CREDITS${SEQS.reset}
+  ${fg24(255, 255, 255)}SURVIVED: ${timeSeconds} SECONDS${SEQS.reset}
+  ${fg24(255, 255, 255)}LAPS COMPLETED: ${Math.min(laps.current - 1, laps.total)}/${laps.total}${SEQS.reset}
+
+  ${isWasted ?
+    `${fg24(255, 100, 100)}The surveillance drones got you.${SEQS.reset}` :
+    `${fg24(100, 255, 100)}You escaped with the GPUs!${SEQS.reset}`}
+
+  ${fg24(0, 255, 0)}[PRESS R TO TRY AGAIN]${SEQS.reset}
+  ${fg24(100, 100, 100)}[PRESS Q TO QUIT]${SEQS.reset}
+`;
+
+  out.write(canvas.toFrameString("") + gameOverText);
+}
+
 function renderSplash() {
   canvas.clear();
-  // diagonal neon streaks
+  // diagonal neon streaks with pulsing effect
   for (let y = 0; y < canvas.ph; y += 2) {
     for (let x = 0; x < canvas.pw; x += 2) {
-      const glow = (Math.sin((x + y) * 0.05) + 1) * 0.5;
+      const glow = (Math.sin((x + y) * 0.05 + Date.now() * 0.001) + 1) * 0.5;
       const color = glow > 0.5 ? C.railL : C.railR;
       if (Math.random() < 0.35) {
         canvas.plot(x, y, color);
       }
     }
   }
-  const splashHud = `${fg24(200, 210, 255)}NEON RAILS${SEQS.reset} — ${fg24(170, 230, 255)}${splashPrompt}${SEQS.reset}`;
+  const splashHud = `${fg24(0, 255, 255)}╔═══════════════════════════════════════╗${SEQS.reset}
+${fg24(0, 255, 255)}║${SEQS.reset}  ${fg24(255, 0, 255)}NEON RAILS${SEQS.reset} ${fg24(0, 255, 0)}v0.1${SEQS.reset}                   ${fg24(0, 255, 255)}║${SEQS.reset}
+${fg24(0, 255, 255)}║${SEQS.reset}  ${fg24(200, 210, 255)}SOMA UNDERGROUND 2025${SEQS.reset}              ${fg24(0, 255, 255)}║${SEQS.reset}
+${fg24(0, 255, 255)}╚═══════════════════════════════════════╝${SEQS.reset}`;
   const info = `
 
-  ██╗  ██╗███████╗ ██████╗ ███╗   ██╗    ██████╗ ███████╗ █████╗ ██╗     ██╗   ██╗
-  ██║  ██║██╔════╝██╔═══██╗████╗  ██║    ██╔══██╗██╔════╝██╔══██╗██║     ██║   ██║
-  ███████║█████╗  ██║   ██║██╔██╗ ██║    ██████╔╝█████╗  ███████║██║     ██║   ██║
-  ██╔══██║██╔══╝  ██║   ██║██║╚██╗██║    ██╔═══╝ ██╔══╝  ██╔══██║██║     ██║   ██║
-  ██║  ██║███████╗╚██████╔╝██║ ╚████║    ██║     ███████╗██║  ██║███████╗╚██████╔╝
-  ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝     ╚══════╝╚═╝  ╚═╝╚══════╝ ╚═════╝
+  ${fg24(255, 0, 255)}███╗   ██╗███████╗ ██████╗ ███╗   ██╗    ██████╗  █████╗ ██╗██╗     ███████╗${SEQS.reset}
+  ${fg24(255, 0, 255)}████╗  ██║██╔════╝██╔═══██╗████╗  ██║    ██╔══██╗██╔══██╗██║██║     ██╔════╝${SEQS.reset}
+  ${fg24(0, 255, 255)}██╔██╗ ██║█████╗  ██║   ██║██╔██╗ ██║    ██████╔╝███████║██║██║     ███████╗${SEQS.reset}
+  ${fg24(0, 255, 255)}██║╚██╗██║██╔══╝  ██║   ██║██║╚██╗██║    ██╔══██╗██╔══██║██║██║     ╚════██║${SEQS.reset}
+  ${fg24(255, 0, 255)}██║ ╚████║███████╗╚██████╔╝██║ ╚████║    ██║  ██║██║  ██║██║███████╗███████║${SEQS.reset}
+  ${fg24(255, 0, 255)}╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝${SEQS.reset}
 
-  Nightfall in SOMA. Hack a hovercar, race for GPU crates, dodge drone spotlights.
+  ${fg24(0, 255, 0)}The mega AIs control everything now.${SEQS.reset}
+  ${fg24(0, 255, 0)}Race through SOMA for GPU credits.${SEQS.reset}
+  ${fg24(0, 255, 0)}Build your cluster. Dream of escape.${SEQS.reset}
 
-  Controls:
-    • ←/→ or A/D — steer
-    • ↑/↓ or W/S — throttle & brake
-    • P — pause / resume
-    • R — restart run
-    • ENTER / SPACE — start race
-    • Q — bail out
+  ${fg24(200, 210, 255)}CONTROLS:${SEQS.reset}
+    ${fg24(255, 255, 255)}↑ ↓ ← →${SEQS.reset} : DRIVE
+    ${fg24(255, 255, 255)}RAM ENEMIES${SEQS.reset} FOR CREDITS
 
-  Objective: grab GPUs, ram rivals, finish 3 laps, and bank the credits.
+  ${fg24(200, 210, 255)}COLLECT:${SEQS.reset}
+    ${fg24(255, 215, 0)}₿${SEQS.reset} : H100 TOKEN [+10]
+    ${fg24(0, 255, 255)}¤${SEQS.reset} : GPU CREDIT [+5]
+
+  ${fg24(0, 255, 0)}[${splashPrompt}]${SEQS.reset}
 `;
-  out.write(canvas.toFrameString(splashHud) + info);
+  out.write(splashHud + canvas.toFrameString("") + info);
 }
 
 function renderFrame() {
-  canvas.clear();
-  drawTrack(canvas);
-  renderCars(canvas);
   canvas.clear();
   drawTrack(canvas);
   renderCars(canvas);
@@ -550,6 +606,7 @@ function renderFrame() {
     laps,
     position: playerEntry.position,
     rivals: rivalsForHud,
+    raceTime: status.raceTime,
   });
   out.write(canvas.toFrameString(hudLine) + "\n" + panel + "\n");
 }
@@ -559,6 +616,10 @@ function update(dt) {
     renderSplash();
     return;
   }
+  if (status.finished && status.gameOverType) {
+    renderGameOver();
+    return;
+  }
   if (status.timer > 0) {
     status.timer = Math.max(0, status.timer - dt);
     if (status.timer === 0 && !status.finished) {
@@ -566,6 +627,7 @@ function update(dt) {
     }
   }
   if (!status.paused && !status.finished) {
+    status.raceTime++;
     updatePlayer(dt);
     updateRivals(dt);
   }

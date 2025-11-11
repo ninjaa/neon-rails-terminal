@@ -28,11 +28,13 @@ function renderHudPanel(state) {
     laps = { current: 0, total: 0 },
     position = 1,
     rivals = [],
+    raceTime = 0,
   } = state;
 
-  const dmgPct = Math.round(clamp(damage) * 100);
-  const damageBar = makeBar(damage);
-  const critical = dmgPct >= 75;
+  const health = Math.max(0, 1 - damage);
+  const healthPct = Math.round(health * 100);
+  const healthBar = makeBar(health);
+  const critical = healthPct <= 25;
 
   const standings = [
     { name: playerName, position, tag: "YOU", damage, credits },
@@ -46,24 +48,34 @@ function renderHudPanel(state) {
   ].sort((a, b) => a.position - b.position);
 
   const lines = [];
-  lines.push("╔════ NEON STATUS ════╗");
+  lines.push("╔═══════════════════════════════════════╗");
+  lines.push("║           NEON RAILS v0.1             ║");
+  lines.push("║        SOMA UNDERGROUND 2025          ║");
+  lines.push("╠═══════════════════════════════════════╣");
+  lines.push(`║ GPU CREDITS: ${String(credits).padStart(3, " ")}                      ║`);
   lines.push(
-    `║ Damage [${damageBar}] ${String(dmgPct).padStart(3, " ")}%${
-      critical ? " CRITICAL" : "         "
-    }║`,
+    `║ HP: ${healthBar} ${String(healthPct).padStart(3, " ")}%${
+      critical ? " ⚠" : "  "
+    }            ║`,
   );
-  const speedStr = `${speed.toFixed(0)} / ${maxSpeed.toFixed(0)}`.padEnd(13, " ");
-  lines.push(`║ Speed  ${speedStr}║`);
-  lines.push(`║ GPU ${String(credits).padEnd(11, " ")}║`);
+  const timeSeconds = Math.floor((raceTime || 0) / 20);
+  lines.push(`║ TIME: ${String(timeSeconds).padStart(3, " ")}s                           ║`);
+  const speedStr = `${speed.toFixed(0)}/${maxSpeed.toFixed(0)} km/h`;
+  lines.push(`║ SPEED: ${speedStr.padEnd(10, " ")}                 ║`);
   const lapStr = `${laps.current}/${laps.total}`;
-  lines.push(`║ Lap ${lapStr.padEnd(12, " ")}║`);
-  lines.push("║ Rivals             ║");
+  lines.push(`║ LAP: ${lapStr.padEnd(7, " ")}                        ║`);
+  lines.push("╠═══════════════════════════════════════╣");
+  lines.push("║ STANDINGS:                            ║");
   standings.forEach((racer, idx) => {
     const place = ordinal(idx + 1).padEnd(4, " ");
-    const name = racer.tag.padEnd(10, " ");
-    lines.push(`║ ${place}${name}║`);
+    const name = racer.tag === "YOU" ? "▶ YOU" : `  ${racer.tag}`;
+    const entry = `${place} ${name.padEnd(15, " ")}`;
+    lines.push(`║ ${entry.padEnd(37, " ")} ║`);
   });
-  lines.push("╚═════════════════════╝");
+  lines.push("╚═══════════════════════════════════════╝");
+  if (critical) {
+    lines.push("    SURVEILLANCE DRONES DETECTED...");
+  }
   return lines.join("\n");
 }
 
